@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUISelectElement, UUITextareaElement, UUIToggleElement } from "@umbraco-cms/backoffice/external/uui";
 import type { UmbInputDocumentElement } from "@umbraco-cms/backoffice/document";
 import type { UmbInputMediaElement } from "@umbraco-cms/backoffice/media";
-import { getDefinition, type EntityField, type Field, type ListField, type TypeDefinition } from "../catalogue/index.js";
+import { fieldHelpText, getDefinition, type EntityField, type Field, type ListField, type TypeDefinition } from "../catalogue/index.js";
 import { KobenValueChangeEvent } from "../events.js";
 import { isJsonObject, isReference, type JsonObject, type JsonValue, type ReferenceValue } from "../model.js";
 import type { KobenReferenceLookup } from "../reference-lookup.js";
@@ -98,8 +98,9 @@ export class KobenStructuredDataEntityFormElement extends UmbLitElement {
     }
 
     const label = field.required ? `${field.label} *` : field.label;
+    // The layout renders its description as markdown: a bold "Required." or "Recommended." lead-in, then the help and an example.
     return html`
-      <umb-property-layout orientation="vertical" .label=${label} .description=${field.description ?? ""}>
+      <umb-property-layout orientation="vertical" .label=${label} .description=${fieldHelpText(field)}>
         <div slot="editor">${this.#renderInput(field, value)}</div>
       </umb-property-layout>
     `;

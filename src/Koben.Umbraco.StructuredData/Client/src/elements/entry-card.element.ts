@@ -155,7 +155,7 @@ export class KobenStructuredDataEntryCardElement extends UmbLitElement {
   #renderBody(isCustom: boolean, definition: ReturnType<typeof getDefinition>, completeness: Completeness) {
     return html`
       <div class="body">
-        ${this.#renderHints(completeness, definition?.docsUrl)}
+        ${this.#renderHints(completeness, definition)}
         ${isCustom
           ? this.#renderCustom()
           : definition
@@ -173,13 +173,24 @@ export class KobenStructuredDataEntryCardElement extends UmbLitElement {
     `;
   }
 
-  #renderHints(completeness: Completeness, docsUrl?: string) {
-    if (!completeness.missing.length && !completeness.suggested.length && !docsUrl) return nothing;
+  #renderHints(completeness: Completeness, definition: ReturnType<typeof getDefinition>) {
+    const guidance = definition?.guidance;
+    const docsUrl = definition?.docsUrl;
+    if (!completeness.missing.length && !completeness.suggested.length && !docsUrl && !guidance) return nothing;
     return html`
       <div class="hints">
+        ${guidance
+          ? html`
+              <p class="hint guidance">
+                <uui-icon name="icon-info"></uui-icon>
+                <span>${guidance}${docsUrl ? html` <a href=${docsUrl} target="_blank" rel="noopener">Google's guidelines ↗</a>` : nothing}</span>
+              </p>
+            `
+          : docsUrl
+            ? html`<p class="hint"><a href=${docsUrl} target="_blank" rel="noopener">Google's guidelines for this type ↗</a></p>`
+            : nothing}
         ${completeness.missing.length ? html`<p class="hint danger"><strong>Required:</strong> ${completeness.missing.join(", ")}</p>` : nothing}
         ${completeness.suggested.length ? html`<p class="hint warning"><strong>Recommended:</strong> ${completeness.suggested.join(", ")}</p>` : nothing}
-        ${docsUrl ? html`<p class="hint"><a href=${docsUrl} target="_blank" rel="noopener">Google's guidance for this type ↗</a></p>` : nothing}
       </div>
     `;
   }
@@ -278,6 +289,25 @@ export class KobenStructuredDataEntryCardElement extends UmbLitElement {
       .hint {
         margin: 0 0 var(--uui-size-space-2);
         font-size: var(--uui-type-small-size);
+      }
+
+      .hint.guidance {
+        display: flex;
+        gap: var(--uui-size-space-2);
+        align-items: flex-start;
+        padding: var(--uui-size-space-3) var(--uui-size-space-4);
+        margin-bottom: var(--uui-size-space-3);
+        background: var(--uui-color-surface-alt);
+        border-left: 3px solid var(--uui-color-border-emphasis);
+        border-radius: var(--uui-border-radius);
+        color: var(--uui-color-text);
+        line-height: 1.5;
+      }
+
+      .hint.guidance uui-icon {
+        flex-shrink: 0;
+        margin-top: 2px;
+        color: var(--uui-color-text-alt);
       }
 
       .hint.danger {

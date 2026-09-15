@@ -8,6 +8,8 @@ import { formatJsonLd } from "../jsonld.js";
 import type { JsonObject } from "../model.js";
 import { rulesApi, RulesApiError } from "./rules.api.js";
 import type { BindingFields, CultureModel, DocumentTypeModel, RuleModel, SiteModel } from "./rules.types.js";
+import { SOURCE_HELP } from "./sources.js";
+import { templateFor } from "./templates.js";
 import "./binding-fields.element.js";
 
 export class KobenRuleSavedEvent extends Event {
@@ -137,6 +139,19 @@ export class KobenStructuredDataRuleEditorElement extends UmbLitElement {
     }
   }
 
+  /** Replaces the bindings with the type's recommended set; the name is filled in only if still blank. */
+  #applyTemplate() {
+    const template = templateFor(this._draft.definition["@type"]);
+    if (!template) return;
+    if (Object.keys(this._draft.definition.fields).length && !confirm("Replace the current bindings with the recommended set for this type?")) return;
+    this.#update({
+      name: this._draft.name.trim() ? this._draft.name : template.name,
+      scope: this._draft.key ? this._draft.scope : template.scope,
+      definition: { ...this._draft.definition, fields: structuredClone(template.fields) },
+    });
+    this._message = { text: template.note, color: "positive" };
+  }
+
   #applyAdvanced(event: Event) {
     const text = (event.target as UUITextareaElement).value as string;
     try {
@@ -160,8 +175,14 @@ export class KobenStructuredDataRuleEditorElement extends UmbLitElement {
         ${this.#renderHeader()}
         ${this.#renderScope()}
         ${this.#renderType()}
-        <umb-property-layout orientation="vertical" label="Fields" description="Where each schema.org property gets its value. Empty results are dropped when the page renders.">
+        <umb-property-layout orientation="vertical" label="Fields" description="Where each schema.org property gets its value. Empty results are dropped when the page renders, so bind optimistically and remove only what the site will never have.">
           <div slot="editor">
+            <details class="reference">
+              <summary>What the sources mean</summary>
+              <dl>
+                ${Object.entries(SOURCE_HELP).map(([source, text]) => html`<dt>${this.#sourceLabel(source)}</dt><dd>${text}</dd>`)}
+              </dl>
+            </details>
             ${this._advanced
               ? html`
                   <uui-textarea
@@ -312,6 +333,7 @@ export class KobenStructuredDataRuleEditorElement extends UmbLitElement {
       .map((group) => ({ group, items: topLevelDefinitions().filter((definition) => definition.group === group) }))
       .filter((entry) => entry.items.length);
     const known = topLevelDefinitions().some((definition) => definition.alias === current || definition.typeVariants?.some((variant) => variant.value === current));
+    const template = templateFor(current);
 
     return html`
       <umb-property-layout orientation="vertical" label="Schema type" description="The entity this rule generates.">
@@ -346,9 +368,49 @@ export class KobenStructuredDataRuleEditorElement extends UmbLitElement {
           ${!known
             ? html`<uui-input label="Custom @type" placeholder="schema.org type name" .value=${current} @input=${(event: Event) => this.#updateDefinition({ "@type": (event.target as UUIInputElement).value as string })}></uui-input>`
             : nothing}
+          ${family?.guidance || family?.docsUrl
+            ? html`
+                <p class="guidance">
+                  <uui-icon name="icon-info"></uui-icon>
+                  <span>
+                    ${family.guidance ?? ""}
+                    ${family.docsUrl ? html` <a href=${family.docsUrl} target="_blank" rel="noopener">Google's guidelines ↗</a>` : nothing}
+                  </span>
+                </p>
+              `
+            : nothing}
+          ${template
+            ? html`
+                <div class="template">
+                  <uui-button look="outline" compact label="Use the recommended bindings" @click=${this.#applyTemplate}>
+                    <uui-icon name="icon-wand"></uui-icon> Use the recommended bindings for ${family?.label ?? current}
+                  </uui-button>
+                  <span class="hint">Fills the fields below with the usual sources; rows marked “choose a property” need a field from your document type.</span>
+                </div>
+              `
+            : nothing}
         </div>
       </umb-property-layout>
     `;
+  }
+
+  #sourceLabel(source: string): string {
+    const labels: Record<string, string> = {
+      property: "Page property",
+      value: "Fixed value",
+      dictionary: "Dictionary item",
+      url: "Page URL",
+      name: "Page name",
+      createDate: "Created date",
+      updateDate: "Last updated date",
+      breadcrumb: "Breadcrumb trail",
+      children: "Child pages",
+      ref: "Reference (@id)",
+      id: "Identifier (@id)",
+      entity: "Nested entity",
+      list: "List of entities",
+    };
+    return labels[source] ?? source;
   }
 
   #renderTest() {
@@ -460,6 +522,62 @@ export class KobenStructuredDataRuleEditorElement extends UmbLitElement {
         display: flex;
         flex-direction: column;
         gap: var(--uui-size-space-2);
+      }
+
+      .guidance {
+        display: flex;
+        gap: var(--uui-size-space-2);
+        align-items: flex-start;
+        margin: var(--uui-size-space-2) 0 0;
+        padding: var(--uui-size-space-3) var(--uui-size-space-4);
+        background: var(--uui-color-surface-alt);
+        border-left: 3px solid var(--uui-color-border-emphasis);
+        border-radius: var(--uui-border-radius);
+        font-size: var(--uui-type-small-size);
+        line-height: 1.5;
+      }
+
+      .guidance uui-icon {
+        flex-shrink: 0;
+        margin-top: 2px;
+        color: var(--uui-color-text-alt);
+      }
+
+      .template {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--uui-size-space-3);
+      }
+
+      .reference {
+        margin-bottom: var(--uui-size-space-3);
+      }
+
+      .reference summary {
+        cursor: pointer;
+        font-size: var(--uui-type-small-size);
+        color: var(--uui-color-interactive);
+      }
+
+      .reference dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: var(--uui-size-space-1) var(--uui-size-space-4);
+        margin: var(--uui-size-space-2) 0 0;
+        padding: var(--uui-size-space-3) var(--uui-size-space-4);
+        background: var(--uui-color-surface-alt);
+        border-radius: var(--uui-border-radius);
+        font-size: var(--uui-type-small-size);
+        line-height: 1.4;
+      }
+
+      .reference dt {
+        font-weight: 600;
+      }
+
+      .reference dd {
+        margin: 0;
       }
 
       .native {

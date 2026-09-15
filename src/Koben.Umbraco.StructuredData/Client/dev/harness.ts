@@ -1,4 +1,4 @@
-import "../node_modules/@umbraco-ui/uui/dist/themes/light.css";
+import "../node_modules/@umbraco-ui/uui-css/dist/uui-css.css";
 import "@umbraco-cms/backoffice/external/uui";
 import "../src/elements/property-editor-ui.element.js";
 import "../src/elements/entry-card.element.js";

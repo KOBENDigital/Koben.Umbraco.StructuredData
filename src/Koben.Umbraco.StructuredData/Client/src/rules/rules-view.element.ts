@@ -4,6 +4,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { getDefinition } from "../catalogue/index.js";
 import { rulesApi, RulesApiError } from "./rules.api.js";
 import { newRule, type CultureModel, type DocumentTypeModel, type RuleModel, type SiteModel } from "./rules.types.js";
+import { ruleFromTemplate, STARTER_TYPES, templates } from "./templates.js";
 import type { KobenRuleDeletedEvent, KobenRuleSavedEvent } from "./rule-editor.element.js";
 import "./rule-editor.element.js";
 
@@ -63,6 +64,16 @@ export class KobenStructuredDataRulesViewElement extends UmbLitElement {
 
   #create() {
     this._selected = newRule();
+  }
+
+  #createFromTemplate(type: string) {
+    this._selected = ruleFromTemplate(type);
+  }
+
+  /** Starter types the site does not have a rule for yet, so the landing panel only suggests what is missing. */
+  get #missingStarters(): string[] {
+    const present = new Set(this._rules.map((rule) => getDefinition(rule.definition["@type"])?.alias ?? rule.definition["@type"]));
+    return STARTER_TYPES.filter((type) => !present.has(type));
   }
 
   #onSaved(event: KobenRuleSavedEvent) {
@@ -152,9 +163,30 @@ export class KobenStructuredDataRulesViewElement extends UmbLitElement {
               `
             : html`
                 <uui-box headline="Structured data generation">
-                  <p>Rules build schema.org JSON-LD from each page's own fields at request time. Use site-wide rules for the Organisation and Website, and document type rules for Articles, People, Services and so on.</p>
+                  <p>Rules build schema.org JSON-LD from each page's own fields at request time, so editors only author the exceptions. Use site-wide rules for the Organisation, Website and Web page, and document type rules for Articles, People, Services and so on.</p>
                   <p>Precedence on a page: site-wide rules, then document type rules, then anything an editor authored on the site root, then the page's own entries. A later node replaces an earlier one of the same type, so editors can always override a rule for one page.</p>
-                  <p>Select a rule on the left, or create one.</p>
+                  ${this.#missingStarters.length
+                    ? html`
+                        <h4>Start with the usual rules</h4>
+                        <p class="muted">Each one opens prefilled with the recommended bindings; pick your own properties where asked, remove what the site does not have, test on a page, then save.</p>
+                        <div class="starters">
+                          ${this.#missingStarters.map((type) => {
+                            const definition = getDefinition(type);
+                            const template = templates[type];
+                            return html`
+                              <button class="starter" type="button" @click=${() => this.#createFromTemplate(type)}>
+                                <umb-icon name=${definition?.icon ?? "icon-code"}></umb-icon>
+                                <span class="starter-text">
+                                  <span class="starter-name">${template?.name ?? type}</span>
+                                  <span class="starter-meta">${template?.scope === "site" ? "Every page" : "Chosen document types"} · ${definition?.description ?? ""}</span>
+                                </span>
+                              </button>
+                            `;
+                          })}
+                        </div>
+                      `
+                    : nothing}
+                  <p>Select a rule on the left, or create one from scratch.</p>
                 </uui-box>
               `}
         </section>
@@ -248,6 +280,57 @@ export class KobenStructuredDataRulesViewElement extends UmbLitElement {
         gap: var(--uui-size-space-2);
         padding-top: var(--uui-size-space-3);
         border-top: 1px solid var(--uui-color-border);
+      }
+
+      .starters {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: var(--uui-size-space-3);
+        margin: var(--uui-size-space-3) 0 var(--uui-size-space-5);
+      }
+
+      .starter {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--uui-size-space-3);
+        text-align: left;
+        padding: var(--uui-size-space-3) var(--uui-size-space-4);
+        border: 1px solid var(--uui-color-border);
+        border-radius: var(--uui-border-radius);
+        background: var(--uui-color-surface);
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .starter:hover {
+        border-color: var(--uui-color-interactive-emphasis);
+        background: var(--uui-color-surface-alt);
+      }
+
+      .starter umb-icon {
+        font-size: 1.3em;
+        margin-top: 2px;
+        color: var(--uui-color-text-alt);
+      }
+
+      .starter-text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .starter-name {
+        font-weight: 600;
+      }
+
+      .starter-meta {
+        font-size: var(--uui-type-small-size);
+        color: var(--uui-color-text-alt);
+      }
+
+      .muted {
+        color: var(--uui-color-text-alt);
       }
 
       .empty,

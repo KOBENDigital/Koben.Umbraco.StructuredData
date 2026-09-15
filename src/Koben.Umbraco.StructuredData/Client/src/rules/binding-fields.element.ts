@@ -1,12 +1,14 @@
 import { css, customElement, html, nothing, property, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUISelectElement, UUIToggleElement } from "@umbraco-cms/backoffice/external/uui";
-import { getDefinition, type Field, type TypeDefinition } from "../catalogue/index.js";
+import { fieldHelp, getDefinition, type Field, type TypeDefinition } from "../catalogue/index.js";
 import { KobenValueChangeEvent } from "../events.js";
 import type { JsonValue } from "../model.js";
 import type { Binding, BindingFields, CultureModel, DocumentTypeModel, RefTarget } from "./rules.types.js";
+import { describeBinding, SOURCE_HELP, sourceOptions } from "./sources.js";
+import { EXTRA_KEY_HELP, suggestionFor } from "./templates.js";
 
-type SourceOption = { value: string; label: string };
+type AliasOption = { value: string; label: string };
 
 const REF_TARGETS: Array<{ value: RefTarget; label: string }> = [
   { value: "organization", label: "The site's Organisation" },
@@ -55,15 +57,15 @@ export class KobenStructuredDataBindingFieldsElement extends UmbLitElement {
   }
 
   /** Properties grouped by the document types the rule applies to; shared aliases appear once, under "Shared". */
-  get #aliasGroups(): Array<{ label: string; options: SourceOption[] }> {
+  get #aliasGroups(): Array<{ label: string; options: AliasOption[] }> {
     const counts = new Map<string, number>();
     for (const type of this.documentTypes) {
       for (const prop of type.properties) counts.set(prop.alias, (counts.get(prop.alias) ?? 0) + 1);
     }
     const shared = new Map<string, string>();
-    const groups: Array<{ label: string; options: SourceOption[] }> = [];
+    const groups: Array<{ label: string; options: AliasOption[] }> = [];
     for (const type of this.documentTypes) {
-      const own: SourceOption[] = [];
+      const own: AliasOption[] = [];
       for (const prop of type.properties) {
         if (this.documentTypes.length > 1 && counts.get(prop.alias) === this.documentTypes.length) {
           shared.set(prop.alias, prop.name);
@@ -123,57 +125,27 @@ export class KobenStructuredDataBindingFieldsElement extends UmbLitElement {
     `;
   }
 
-  #sourceOptions(field: Field | undefined): SourceOption[] {
-    const common: SourceOption[] = [
-      { value: "", label: "Not set" },
-      { value: "property", label: "Page property" },
-      { value: "value", label: "Fixed value" },
-      { value: "dictionary", label: "Dictionary item (translated)" },
-    ];
-    const page: SourceOption[] = [
-      { value: "url", label: "Page URL" },
-      { value: "name", label: "Page name" },
-      { value: "createDate", label: "Created date" },
-      { value: "updateDate", label: "Last updated date" },
-    ];
-    const entityish: SourceOption[] = [
-      { value: "entity", label: "Nested entity" },
-      { value: "ref", label: "Reference (@id)" },
-    ];
-    const listish: SourceOption[] = [
-      { value: "breadcrumb", label: "Breadcrumb trail (ancestors)" },
-      { value: "children", label: "Child pages" },
-      { value: "list", label: "List of entities" },
-    ];
-
-    switch (field?.kind) {
-      case "entity":
-        return [...common, ...entityish];
-      case "list":
-        return [...common, ...listish, { value: "entity", label: "Single nested entity" }];
-      case "image":
-      case "document":
-      case "link":
-        return [...common, { value: "url", label: "Page URL" }];
-      case "boolean":
-      case "select":
-      case "number":
-        return common;
-      case undefined:
-        return [...common, ...page, ...entityish, ...listish, { value: "id", label: "Identifier (@id)" }];
-      default:
-        return [...common, ...page];
-    }
-  }
-
   #renderRow(key: string, label: string, field: Field | undefined, binding: Binding | undefined) {
     const source = binding?.source ?? "";
-    const options = this.#sourceOptions(field);
+    const options = sourceOptions(field);
+    const help = fieldHelp(field);
+    const extraHelp = field ? undefined : EXTRA_KEY_HELP[key];
+    // Suggestions come from the type's template and only apply to the rule's own (top-level) fields.
+    const suggestion = !binding && !this.nested && this.definition ? suggestionFor(this.definition.alias, key) : undefined;
     return html`
       <div class="row ${binding ? "bound" : ""}">
         <div class="row-label">
           <span class="label">${label}</span>
           <span class="key">${key}</span>
+          ${help.status || help.description || extraHelp
+            ? html`
+                <span class="help">
+                  ${help.status ? html`<span class="status ${help.status.toLowerCase()}">${help.status}</span> ` : nothing}
+                  ${help.description ?? extraHelp ?? ""}
+                </span>
+              `
+            : nothing}
+          ${help.example ? html`<span class="help example">Example: ${help.example}</span>` : nothing}
         </div>
         <div class="row-control">
           <div class="row-source">
@@ -184,10 +156,41 @@ export class KobenStructuredDataBindingFieldsElement extends UmbLitElement {
               @change=${(event: Event) => this.#changeSource(key, field, (event.target as UUISelectElement).value as string)}></uui-select>
             ${field ? nothing : html`<uui-button compact look="secondary" color="danger" label="Remove" @click=${() => this.#set(key, undefined)}><uui-icon name="icon-trash"></uui-icon></uui-button>`}
           </div>
-          ${binding ? html`<div class="row-body">${this.#renderBinding(key, field, binding)}</div>` : nothing}
+          ${suggestion
+            ? html`
+                <div class="suggest">
+                  <span>Usually: ${describeBinding(suggestion)}</span>
+                  <uui-button compact look="outline" label="Use the usual source for ${key}" @click=${() => this.#set(key, structuredClone(suggestion))}>Use</uui-button>
+                </div>
+              `
+            : nothing}
+          ${binding
+            ? html`
+                <div class="row-body">
+                  ${this.#hasSettings(binding) ? html`<p class="source-help">${SOURCE_HELP[binding.source]}</p>` : nothing}
+                  ${this.#renderBinding(key, field, binding)}
+                </div>
+              `
+            : nothing}
         </div>
       </div>
     `;
+  }
+
+  /** Sources with their own settings show their help above the settings; the rest describe themselves inline. */
+  #hasSettings(binding: Binding): boolean {
+    switch (binding.source) {
+      case "property":
+      case "value":
+      case "dictionary":
+      case "ref":
+      case "id":
+      case "entity":
+      case "list":
+        return true;
+      default:
+        return false;
+    }
   }
 
   #changeSource(key: string, field: Field | undefined, source: string) {
@@ -249,23 +252,8 @@ export class KobenStructuredDataBindingFieldsElement extends UmbLitElement {
     }
   }
 
-  #describe(source: string): string {
-    switch (source) {
-      case "url":
-        return "The page's own URL in the language being served, made absolute for the site.";
-      case "name":
-        return "The document's name in the content tree.";
-      case "createDate":
-        return "When the document was created (ISO 8601).";
-      case "updateDate":
-        return "When the document was last saved (ISO 8601).";
-      case "breadcrumb":
-        return "A ListItem for each ancestor, root first, ending with this page.";
-      case "children":
-        return "A ListItem for each published child page, in tree order.";
-      default:
-        return "";
-    }
+  #describe(source: Binding["source"]): string {
+    return SOURCE_HELP[source] ?? "";
   }
 
   #renderProperty(key: string, binding: Extract<Binding, { source: "property" }>) {
@@ -506,6 +494,44 @@ export class KobenStructuredDataBindingFieldsElement extends UmbLitElement {
         font-family: var(--uui-font-monospace, monospace);
         font-size: 11px;
         color: var(--uui-color-text-alt);
+      }
+
+      .help {
+        margin-top: var(--uui-size-space-1);
+        font-size: var(--uui-type-small-size);
+        color: var(--uui-color-text-alt);
+        line-height: 1.4;
+      }
+
+      .help.example {
+        font-style: italic;
+      }
+
+      .status {
+        font-weight: 600;
+      }
+
+      .status.required {
+        color: var(--uui-color-danger);
+      }
+
+      .status.recommended {
+        color: var(--uui-color-warning-standalone);
+      }
+
+      .suggest {
+        display: flex;
+        align-items: center;
+        gap: var(--uui-size-space-3);
+        font-size: var(--uui-type-small-size);
+        color: var(--uui-color-text-alt);
+      }
+
+      .source-help {
+        margin: 0 0 var(--uui-size-space-3);
+        font-size: var(--uui-type-small-size);
+        color: var(--uui-color-text-alt);
+        line-height: 1.4;
       }
 
       .row-control {

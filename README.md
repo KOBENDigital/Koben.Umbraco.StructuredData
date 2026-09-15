@@ -155,6 +155,12 @@ Binding sources:
 Picked media become `ImageObject`s, picked pages become URLs, dates become ISO 8601, rich text is
 flattened to text, and empty results are dropped, so a rule can bind optimistically.
 
+The editor guides the setup: the landing view offers the usual first rules (Website, Organisation,
+Web page, Article) prefilled with recommended bindings, every type has a "Use the recommended
+bindings" button, each unbound field shows what it is usually bound to with a one-click **Use**,
+and a "What the sources mean" reference sits above the fields. Rows marked "choose a property"
+need a field from your document type; remove any the site does not have.
+
 **Multi-site and multi-language.** A rule can be limited to **sites** (root nodes, picked from
 the list of roots with their hostnames; matched by key, then by name so an export applied to
 another environment still finds its site) and to **languages** (culture ISO codes). Both filters are

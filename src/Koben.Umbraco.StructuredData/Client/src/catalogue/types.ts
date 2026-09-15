@@ -12,6 +12,8 @@ interface FieldBase {
   /** Google's rich results are richer with it. */
   recommended?: boolean;
   placeholder?: string;
+  /** A realistic value, shown as "Example: …" under the input and beside the rule binding. */
+  example?: string;
 }
 
 export type ScalarFieldKind = "text" | "textarea" | "url" | "email" | "tel" | "date" | "datetime" | "number" | "duration";
@@ -82,6 +84,8 @@ export interface TypeDefinition {
   summaryKey?: string;
   /** Google's documentation for the rich result, when there is one. */
   docsUrl?: string;
+  /** Best practice in a few sentences: where to put it, what to fill, what to avoid. Shown in the page editor and the rule editor. */
+  guidance?: string;
   /** Starting node for a fresh entry beyond `@type`. */
   defaults?: JsonObject;
 }

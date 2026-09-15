@@ -24,16 +24,22 @@ has stored a data type is a content-model change, not a refactor.
 
 Add a `TypeDefinition` in `Client/src/catalogue/index.ts` using the helpers in `fields.ts`. Mark
 fields `required` only where Google's rich-result documentation says the entity is rejected
-without them, `recommended` where it says results are richer. Nested-only types set
-`topLevel: false`. Nothing server-side changes: the C# side is type-agnostic.
+without them, `recommended` where it says results are richer. Give every top-level type a
+`guidance` paragraph (where to put it, what to fill, what to avoid; it shows in the page editor
+and the rule editor) and give fields a `description` and a realistic `example`; both render under
+the input and beside the rule binding. Nested-only types set `topLevel: false`. If the type is
+usually generated rather than authored, add a template in `Client/src/rules/templates.ts`; the
+test there checks it only binds known properties with sources the editor offers. Nothing
+server-side changes: the C# side is type-agnostic.
 
 ## Rules and the graph
 
 `Rules/StructuredDataRuleEvaluator.cs` turns a rule's bindings into a node that still carries
 `$ref` placeholders; `Graph/StructuredDataGraphService.cs` layers site rules, document type rules,
 site-root authored entries and page entries, then de-duplicates by `@type`. Adding a binding source
-means: the evaluator's `Bind` switch, the README table, and the source options in
-`Client/src/rules/binding-fields.element.ts`. The API's `scope` is the string `site` |
+means: the evaluator's `Bind` switch, the README table, and `SOURCE_HELP` plus `sourceOptions`
+in `Client/src/rules/sources.ts` (the editor's picker, its help text and the templates test all
+read from there). The API's `scope` is the string `site` |
 `documentTypes`; the DB column stores the same strings.
 
 ## Verification

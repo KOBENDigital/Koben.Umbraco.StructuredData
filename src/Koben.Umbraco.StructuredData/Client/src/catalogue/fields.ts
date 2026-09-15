@@ -12,7 +12,7 @@ import type {
   SelectOption,
 } from "./types.js";
 
-type Flags = Partial<Pick<Field, "required" | "recommended" | "description" | "placeholder">>;
+type Flags = Partial<Pick<Field, "required" | "recommended" | "description" | "placeholder" | "example">>;
 
 function scalar(kind: ScalarFieldKind) {
   return (key: string, label: string, flags: Flags = {}): ScalarField => ({ kind, key, label, ...flags });
