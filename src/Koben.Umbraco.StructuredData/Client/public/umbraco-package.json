@@ -1,0 +1,14 @@
+{
+  "id": "Koben.StructuredData",
+  "name": "Koben Structured Data",
+  "version": "0.1.0",
+  "allowTelemetry": false,
+  "extensions": [
+    {
+      "type": "bundle",
+      "alias": "Koben.StructuredData.Bundle",
+      "name": "Koben Structured Data Bundle",
+      "js": "/App_Plugins/Koben.StructuredData/koben-structured-data.js"
+    }
+  ]
+}

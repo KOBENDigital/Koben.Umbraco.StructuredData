@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <UserSecretsId>koben-structureddata-testsite</UserSecretsId>
+    <!-- Backoffice assets arrive pre-compressed; letting dotnet compress them again corrupts them. -->
+    <CompressionEnabled>false</CompressionEnabled>
+    <CopyRazorGenerateFilesToPublishDirectory>true</CopyRazorGenerateFilesToPublishDirectory>
+    <RazorCompileOnBuild>false</RazorCompileOnBuild>
+    <RazorCompileOnPublish>false</RazorCompileOnPublish>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Koben.Umbraco.StructuredData\Koben.Umbraco.StructuredData.csproj" />
+  </ItemGroup>
+
+</Project>

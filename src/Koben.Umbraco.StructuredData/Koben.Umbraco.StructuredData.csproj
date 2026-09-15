@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <StaticWebAssetBasePath>App_Plugins/Koben.StructuredData</StaticWebAssetBasePath>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Koben.Umbraco.StructuredData</PackageId>
+    <Title>Koben Structured Data for Umbraco</Title>
+    <Description>Schema.org structured data (JSON-LD) editor for the Umbraco 18+ backoffice, with a value converter that serves resolved JSON-LD to Razor and the Delivery API.</Description>
+    <Authors>Koben Digital</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>umbraco;umbraco-marketplace;seo;structured-data;json-ld;schema.org</PackageTags>
+    <RepositoryUrl>https://github.com/KOBENDigital/Koben.Umbraco.StructuredData</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Common" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The TypeScript sources build into wwwroot/; they are not themselves package content. -->
+    <Content Remove="Client\**" />
+    <None Remove="Client\**" />
+  </ItemGroup>
+
+  <!-- Runs the client build ahead of static web asset discovery so wwwroot/ exists before it is scanned. -->
+  <Target Name="BuildClient" BeforeTargets="ResolveStaticWebAssetsInputs" Condition="'$(SkipClientBuild)' != 'true'">
+    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)/Client" Condition="!Exists('$(MSBuildProjectDirectory)/Client/node_modules')" />
+    <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)/Client" />
+  </Target>
+
+</Project>

@@ -1,0 +1,27 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+artifacts/
+
+# Node
+node_modules/
+
+# Generated bundle — vite writes the whole of wwwroot/ from Client/
+src/**/wwwroot/
+
+# Umbraco test site runtime state
+test/TestSite/umbraco/Data/
+test/TestSite/umbraco/Logs/
+test/TestSite/umbraco/mediacache/
+test/TestSite/umbraco/models/
+test/TestSite/wwwroot/media/
+
+# Schemas Umbraco downloads on first boot
+appsettings-schema.json
+appsettings-schema.*.json
+umbraco-package-schema.json
+
+# OS
+.DS_Store
