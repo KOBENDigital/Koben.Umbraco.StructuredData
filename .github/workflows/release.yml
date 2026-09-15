@@ -71,16 +71,35 @@ jobs:
         with:
           user: ${{ secrets.NUGET_USER }}
 
+      # --skip-duplicate lets a rerun (for example after a failed release step) pass without
+      # re-pushing. A version already on nuget.org is immutable, so if you meant to ship a change,
+      # bump the version and tag again; the warning below is the tell.
       - name: Push to nuget.org
-        run: >
-          dotnet nuget push "artifacts/*.nupkg"
-          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
-          --source https://api.nuget.org/v3/index.json
-          --skip-duplicate
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          if curl -sf "https://api.nuget.org/v3-flatcontainer/koben.umbraco.structureddata/index.json" \
+               | grep -qi "\"$VERSION\""; then
+            echo "::warning::Koben.Umbraco.StructuredData $VERSION is already on nuget.org; this push is a no-op. Bump the version to publish new content."
+          fi
+          dotnet nuget push "artifacts/*.nupkg" \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
 
-      - name: Create GitHub release
+      # Idempotent: a rerun updates the existing release's assets instead of failing.
+      # A tag with a hyphen (v1.2.0-beta.1) is a prerelease and must not become "Latest".
+      - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create "$GITHUB_REF_NAME" artifacts/*.nupkg
-          --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+        run: |
+          set -euo pipefail
+          PRERELEASE=()
+          case "$GITHUB_REF_NAME" in *-*) PRERELEASE=(--prerelease) ;; esac
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" artifacts/*.nupkg --clobber
+            gh release edit "$GITHUB_REF_NAME" "${PRERELEASE[@]}"
+          else
+            gh release create "$GITHUB_REF_NAME" artifacts/*.nupkg \
+              --title "$GITHUB_REF_NAME" --generate-notes --verify-tag "${PRERELEASE[@]}"
+          fi
