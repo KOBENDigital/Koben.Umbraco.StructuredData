@@ -1,0 +1,18 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Title": "Koben Structured Data",
+  "Description": "Schema.org structured data (JSON-LD) for Umbraco 17 and 18. Editors build entities from a guided catalogue that knows what Google requires, rules generate entities from existing content, and the merged graph is served to Razor and the Delivery API.",
+  "Category": "Campaign & Marketing",
+  "AlternateCategory": "Editor Tools",
+  "Tags": ["SEO", "Structured Data", "JSON-LD", "Schema.org", "Rich Results", "Delivery API"],
+  "PackageType": "Package",
+  "LicenseTypes": ["Free"],
+  "DocumentationUrl": "https://github.com/KOBENDigital/Koben.Umbraco.StructuredData#readme",
+  "IssueTrackerUrl": "https://github.com/KOBENDigital/Koben.Umbraco.StructuredData/issues",
+  "AuthorDetails": {
+    "Name": "Koben Digital",
+    "Description": "Umbraco agency in Australia.",
+    "Url": "https://koben.com.au",
+    "SyncContributorsFromRepository": true
+  }
+}

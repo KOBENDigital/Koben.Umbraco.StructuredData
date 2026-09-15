@@ -13,6 +13,8 @@
     <Authors>Koben Digital</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>umbraco;umbraco-marketplace;seo;structured-data;json-ld;schema.org</PackageTags>
+    <!-- The Marketplace reads umbraco-marketplace.json from the root of this repository's default branch. -->
+    <PackageProjectUrl>https://github.com/KOBENDigital/Koben.Umbraco.StructuredData</PackageProjectUrl>
     <RepositoryUrl>https://github.com/KOBENDigital/Koben.Umbraco.StructuredData</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
