@@ -215,3 +215,7 @@ A data type stores the schema alias, so these are content-model surface.
 | **Property editor schema alias** | **`Koben.StructuredData`** |
 | Property editor UI alias | `Koben.PropertyEditorUi.StructuredData` |
 | Allowed-types config UI alias | `Koben.PropertyEditorUi.StructuredDataTypeList` |
+
+## License
+
+[MIT](LICENSE). Copyright (c) 2026 Koben Digital.
