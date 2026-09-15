@@ -4,7 +4,7 @@ Rules for agents working in this repository. Modelled on `Koben.Umbraco.Cloudfla
 
 ## What this is
 
-An Umbraco **18+** package: a schema.org structured data (JSON-LD) property editor plus a value
+An Umbraco **17+** package: a schema.org structured data (JSON-LD) property editor plus a value
 converter for Razor and the Delivery API. NuGet id `Koben.Umbraco.StructuredData`, MIT.
 
 ## Frozen names
@@ -49,3 +49,6 @@ means: the evaluator's `Bind` switch, the README table, and the source options i
 
 - Commit `src/**/wwwroot/` (generated) or anything under `test/TestSite/umbraco/Data`.
 - Store secrets anywhere; the package needs none.
+- Use an Umbraco API that is not in 17.0.0. The package compiles against that floor
+  (`UmbracoVersion` in `Directory.Packages.props`) precisely so CI catches this; bumping the floor
+  drops LTS sites and is a release decision, not a convenience.

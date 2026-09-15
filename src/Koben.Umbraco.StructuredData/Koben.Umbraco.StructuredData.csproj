@@ -9,7 +9,7 @@
   <PropertyGroup>
     <PackageId>Koben.Umbraco.StructuredData</PackageId>
     <Title>Koben Structured Data for Umbraco</Title>
-    <Description>Schema.org structured data (JSON-LD) editor for the Umbraco 18+ backoffice, with a value converter that serves resolved JSON-LD to Razor and the Delivery API.</Description>
+    <Description>Schema.org structured data (JSON-LD) editor for the Umbraco 17+ backoffice, with a value converter that serves resolved JSON-LD to Razor and the Delivery API.</Description>
     <Authors>Koben Digital</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>umbraco;umbraco-marketplace;seo;structured-data;json-ld;schema.org</PackageTags>

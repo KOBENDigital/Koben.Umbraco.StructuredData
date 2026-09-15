@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CLIENT_DIR: src/Koben.Umbraco.StructuredData/Client
+
+jobs:
+  client:
+    name: Client typecheck and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: src/Koben.Umbraco.StructuredData/Client/package-lock.json
+      - run: npm ci
+        working-directory: ${{ env.CLIENT_DIR }}
+      - run: npm run typecheck
+        working-directory: ${{ env.CLIENT_DIR }}
+      - run: npm test
+        working-directory: ${{ env.CLIENT_DIR }}
+
+  umbraco:
+    name: Umbraco ${{ matrix.umbraco }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor (what the nupkg is built against), the latest 17 LTS patch, and the latest 18.
+        # Bump the last two as Umbraco releases; the first only with a deliberate floor change.
+        umbraco: ["17.0.0", "17.6.2", "18.1.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: src/Koben.Umbraco.StructuredData/Client/package-lock.json
+
+      - name: Build client bundle
+        working-directory: ${{ env.CLIENT_DIR }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build solution
+        run: dotnet build -c Release -p:UmbracoVersion=${{ matrix.umbraco }} -p:SkipClientBuild=true
+
+      - name: Pack (floor only)
+        if: matrix.umbraco == '17.0.0'
+        run: dotnet pack src/Koben.Umbraco.StructuredData -c Release -o artifacts --no-build -p:SkipClientBuild=true
+
+      - name: Upload nupkg
+        if: matrix.umbraco == '17.0.0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+
+      - name: Boot test site
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd test/TestSite
+          ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5125 \
+            dotnet run -c Release --no-build --no-launch-profile > "$GITHUB_WORKSPACE/testsite.log" 2>&1 &
+          PID=$!
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null 'http://localhost:5125/umbraco/delivery/api/v2/content?take=1'; then break; fi
+            if ! kill -0 "$PID" 2>/dev/null; then echo "::error::test site exited during boot"; exit 1; fi
+            sleep 3
+          done
+          curl -sf -o /dev/null 'http://localhost:5125/umbraco/delivery/api/v2/content?take=1'
+          curl -sf -o /dev/null 'http://localhost:5125/App_Plugins/Koben.StructuredData/koben-structured-data.js'
+          kill "$PID"
+          if grep -E '\[(ERR|FTL)\]' "$GITHUB_WORKSPACE/testsite.log"; then
+            echo "::error::errors logged during boot"; exit 1
+          fi
+          echo "Booted on Umbraco ${{ matrix.umbraco }}: Delivery API and bundle served, no errors logged."
+
+      - name: Upload boot log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testsite-log-${{ matrix.umbraco }}
+          path: testsite.log
+          if-no-files-found: ignore

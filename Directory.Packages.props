@@ -1,19 +1,20 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <!--
+      The Umbraco version everything in this solution compiles against.
+      The default is the lowest version the package supports (the 17 LTS floor); the nupkg's
+      dependency range starts here and consuming sites float above it.
+      CI overrides it to build and boot the test site on newer 17.x and 18.x:
+        dotnet build -p:UmbracoVersion=18.1.1
+      Release builds must use the default.
+    -->
+    <UmbracoVersion Condition="'$(UmbracoVersion)' == ''">17.0.0</UmbracoVersion>
   </PropertyGroup>
   <ItemGroup>
-    <!-- Lowest Umbraco 18 the package supports. Consuming sites float above it. -->
-    <PackageVersion Include="Umbraco.Cms" Version="18.0.2" />
-    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="18.0.2" />
-    <PackageVersion Include="Umbraco.Cms.Api.Delivery" Version="18.0.2" />
-    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="18.0.2" />
-  </ItemGroup>
-  <!-- Advisory pins only (NU1903 on Umbraco 18.0.2's transitive graph); lowest patched version in the same major. -->
-  <ItemGroup>
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
-    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+    <PackageVersion Include="Umbraco.Cms" Version="$(UmbracoVersion)" />
+    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="$(UmbracoVersion)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Delivery" Version="$(UmbracoVersion)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="$(UmbracoVersion)" />
   </ItemGroup>
 </Project>

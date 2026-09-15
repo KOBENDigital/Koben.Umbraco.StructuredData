@@ -8,6 +8,12 @@
     <CopyRazorGenerateFilesToPublishDirectory>true</CopyRazorGenerateFilesToPublishDirectory>
     <RazorCompileOnBuild>false</RazorCompileOnBuild>
     <RazorCompileOnPublish>false</RazorCompileOnPublish>
+    <!--
+      The default UmbracoVersion is the package's supported floor, which by design is the oldest 17.x
+      and so always carries published advisories. They are the consuming site's concern, not this
+      throwaway test site's, and would otherwise appear on every CI run for the floor job.
+    -->
+    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

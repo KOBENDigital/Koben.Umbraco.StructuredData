@@ -1,6 +1,6 @@
 # Koben.Umbraco.StructuredData
 
-Schema.org structured data (JSON-LD) editor for the Umbraco 18+ backoffice, with a value converter
+Schema.org structured data (JSON-LD) editor for the Umbraco 17+ backoffice, with a value converter
 that serves resolved JSON-LD to Razor views and to the Delivery API.
 
 Editors add entities from a catalogue (FAQ, Article, Organisation, Local business, Service, Product,
@@ -11,8 +11,16 @@ the page will emit.
 
 ## Requirements
 
-- Umbraco **18.0.2** or later, on .NET **10**
+- Umbraco **17.0.0** or later (the 17 LTS and 18 are both supported by the same package), on .NET **10**
 - Node 22+ and npm 10+ to build the backoffice bundle
+
+## Compatibility
+
+One package covers Umbraco 17 (LTS) and 18. Everything compiles against the lowest supported
+version, set by `UmbracoVersion` in `Directory.Packages.props` (default **17.0.0**), so the nupkg's
+dependency range starts there and a site on any later 17.x or 18.x resolves it. CI builds the
+solution and boots the test site against the floor, the latest 17.x and the latest 18.x on every
+push; the matrix is in `.github/workflows/ci.yml`. Release builds use the default version.
 
 ## Install
 
@@ -164,7 +172,7 @@ startup.
 | `src/Koben.Umbraco.StructuredData/Client/src/rules/` | The Settings-section rules manager (workspace, editor, binding fields, API client) |
 | `src/Koben.Umbraco.StructuredData/Rules/`, `Graph/`, `Persistence/` | Rule model and evaluator, graph assembly and merge, NPoco storage and migration |
 | `src/Koben.Umbraco.StructuredData/Client/dev/` | A login-free harness (`npm run dev`) that renders the editor outside Umbraco |
-| `test/TestSite/` | A local Umbraco 18 site on SQLite with the package project-referenced |
+| `test/TestSite/` | A local Umbraco site on SQLite with the package project-referenced (version from `UmbracoVersion`, default 17.0.0) |
 
 ## Building
 
@@ -172,6 +180,15 @@ startup.
 dotnet build            # also runs npm ci / npm run build for the bundle
 dotnet pack src/Koben.Umbraco.StructuredData -c Release -o artifacts
 ```
+
+To build or run the test site against another Umbraco version:
+
+```bash
+dotnet build -p:UmbracoVersion=18.1.1
+```
+
+Delete `test/TestSite/umbraco/Data/` when switching versions: Umbraco will not run against a
+database created by a newer major.
 
 To pack after a client change, build the client first and skip the in-build npm step:
 
@@ -201,6 +218,34 @@ cd test/TestSite && dotnet run
 
 Open **https://localhost:44325/umbraco**. Development-only credentials are in
 `appsettings.Development.json`; the site installs unattended on first boot.
+
+## Releasing
+
+Releases are published to nuget.org by `.github/workflows/release.yml` using
+[Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing): GitHub
+presents a short-lived OIDC token, nuget.org exchanges it for a one-hour API key, and nothing
+long-lived is stored in the repository.
+
+One-time setup:
+
+1. On nuget.org, sign in as the account (user or organisation) that should own the package, open
+   **Trusted Publishing** and add a policy: repository owner `KOBENDigital`, repository
+   `Koben.Umbraco.StructuredData`, workflow file `release.yml`, environment `nuget`. While the
+   GitHub repository is private the policy is only provisionally active for seven days; the first
+   successful publish makes it permanent.
+2. In the GitHub repository, add the secret **`NUGET_USER`** holding the nuget.org *profile name*
+   of the policy owner (not an email address). Optionally protect the `nuget` environment with
+   required reviewers so a tag push needs approval before publishing.
+
+To release:
+
+1. Set the same version in `<Version>` in `src/Koben.Umbraco.StructuredData/Koben.Umbraco.StructuredData.csproj`
+   and `version` in `src/Koben.Umbraco.StructuredData/Client/public/umbraco-package.json`, and commit.
+2. Tag and push: `git tag v0.1.0 && git push origin v0.1.0`.
+
+The workflow refuses a tag that does not match both versions, packs against the default
+`UmbracoVersion` (the supported floor), pushes the package and its symbols, and creates a GitHub
+release with the nupkg attached.
 
 ## Frozen names
 
