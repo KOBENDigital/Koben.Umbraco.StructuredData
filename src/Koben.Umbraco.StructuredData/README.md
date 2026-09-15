@@ -15,6 +15,20 @@ emits the merged, resolved JSON-LD to Razor views and the Delivery API.
 - **Two outputs.** `StructuredDataModel` for Razor and a resolved JSON array on the Delivery API,
   including a `structuredDataGraph` property carrying every page's merged graph.
 
+## Screenshots
+
+![Adding an entity: the catalogue is grouped by purpose and each type says what it is for.](https://raw.githubusercontent.com/KOBENDigital/Koben.Umbraco.StructuredData/main/docs/screenshots/type-picker.png)
+
+*Adding an entity: the catalogue is grouped by purpose and each type says what it is for.*
+
+![Editing a Web page entity on a document: readiness badges, page and media pickers, and a JSON-LD preview.](https://raw.githubusercontent.com/KOBENDigital/Koben.Umbraco.StructuredData/main/docs/screenshots/entity-form.png)
+
+*Editing a Web page entity on a document: readiness badges, page and media pickers, and a JSON-LD preview.*
+
+![Generation rules in Settings: scope a rule to pages, sites and languages, then bind each schema.org property to content.](https://raw.githubusercontent.com/KOBENDigital/Koben.Umbraco.StructuredData/main/docs/screenshots/rules-manager.png)
+
+*Generation rules in Settings: scope a rule to pages, sites and languages, then bind each schema.org property to content.*
+
 ## Requirements
 
 | | |

@@ -9,6 +9,20 @@ application, Image, Item list) through a form that knows which fields Google req
 recommends, or paste raw JSON-LD for anything the catalogue does not cover. A live preview shows what
 the page will emit.
 
+## Screenshots
+
+![Adding an entity: the catalogue is grouped by purpose and each type says what it is for.](docs/screenshots/type-picker.png)
+
+*Adding an entity: the catalogue is grouped by purpose and each type says what it is for.*
+
+![Editing a Web page entity on a document: readiness badges, page and media pickers, and a JSON-LD preview.](docs/screenshots/entity-form.png)
+
+*Editing a Web page entity on a document: readiness badges, page and media pickers, and a JSON-LD preview.*
+
+![Generation rules in Settings: scope a rule to pages, sites and languages, then bind each schema.org property to content.](docs/screenshots/rules-manager.png)
+
+*Generation rules in Settings: scope a rule to pages, sites and languages, then bind each schema.org property to content.*
+
 ## Requirements
 
 - Umbraco **17.0.0** or later (the 17 LTS and 18 are both supported by the same package), on .NET **10**

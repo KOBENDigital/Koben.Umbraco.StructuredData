@@ -4,9 +4,18 @@
   "Description": "Schema.org structured data (JSON-LD) for Umbraco 17 and 18. Editors build entities from a guided catalogue that knows what Google requires, rules generate entities from existing content, and the merged graph is served to Razor and the Delivery API.",
   "Category": "Campaign & Marketing",
   "AlternateCategory": "Editor Tools",
-  "Tags": ["SEO", "Structured Data", "JSON-LD", "Schema.org", "Rich Results", "Delivery API"],
+  "Tags": [
+    "SEO",
+    "Structured Data",
+    "JSON-LD",
+    "Schema.org",
+    "Rich Results",
+    "Delivery API"
+  ],
   "PackageType": "Package",
-  "LicenseTypes": ["Free"],
+  "LicenseTypes": [
+    "Free"
+  ],
   "DocumentationUrl": "https://github.com/KOBENDigital/Koben.Umbraco.StructuredData#readme",
   "IssueTrackerUrl": "https://github.com/KOBENDigital/Koben.Umbraco.StructuredData/issues",
   "AuthorDetails": {
@@ -14,5 +23,19 @@
     "Description": "Umbraco agency in Australia.",
     "Url": "https://koben.com.au",
     "SyncContributorsFromRepository": true
-  }
+  },
+  "Screenshots": [
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/KOBENDigital/Koben.Umbraco.StructuredData/main/docs/screenshots/type-picker.png",
+      "Caption": "Adding an entity: the catalogue is grouped by purpose and each type says what it is for."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/KOBENDigital/Koben.Umbraco.StructuredData/main/docs/screenshots/entity-form.png",
+      "Caption": "Editing a Web page entity on a document: readiness badges, page and media pickers, and a JSON-LD preview."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/KOBENDigital/Koben.Umbraco.StructuredData/main/docs/screenshots/rules-manager.png",
+      "Caption": "Generation rules in Settings: scope a rule to pages, sites and languages, then bind each schema.org property to content."
+    }
+  ]
 }
