@@ -39,7 +39,7 @@ public sealed class StructuredDataGraphService(
         IPublishedContent root = Root(content, preview);
         string? culture = variationContextAccessor.VariationContext?.Culture;
         IReadOnlyList<StructuredDataRule> rules = cache.GetEnabled(repository.GetAll)
-            .Where(rule => rule.AppliesToSite(root.Key, root.Name) && rule.AppliesToCulture(culture))
+            .Where(rule => rule.AppliesToSite(root.Key, PublishedContentCompat.Name(root)) && rule.AppliesToCulture(culture))
             .ToList();
 
         var layers = new List<IReadOnlyList<JsonObject>>

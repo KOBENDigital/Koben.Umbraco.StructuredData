@@ -94,9 +94,9 @@ public sealed partial class StructuredDataRuleEvaluator(
             case "name":
                 return JsonValue.Create(NameOf(content));
             case "createDate":
-                return JsonValue.Create(FormatDate(content.CreateDate));
+                return JsonValue.Create(FormatDate(PublishedContentCompat.CreateDate(content)));
             case "updateDate":
-                return JsonValue.Create(FormatDate(content.UpdateDate));
+                return JsonValue.Create(FormatDate(PublishedContentCompat.UpdateDate(content)));
             case "breadcrumb":
                 return ListItems(Ancestors(content).Append(content));
             case "children":
@@ -181,12 +181,12 @@ public sealed partial class StructuredDataRuleEvaluator(
     /// <summary>The document's name in the request culture when it varies, otherwise its invariant name.</summary>
     private string? NameOf(IPublishedContent content)
     {
-        if (Culture is { } culture && content.Cultures.TryGetValue(culture, out PublishedCultureInfo? info) && !string.IsNullOrWhiteSpace(info.Name))
+        if (Culture is { } culture && PublishedContentCompat.Cultures(content).TryGetValue(culture, out PublishedCultureInfo? info) && !string.IsNullOrWhiteSpace(info.Name))
         {
             return info.Name;
         }
 
-        return content.Name;
+        return PublishedContentCompat.Name(content);
     }
 
     private JsonNode? BindProperty(JsonObject binding, IPublishedContent content)
@@ -251,8 +251,8 @@ public sealed partial class StructuredDataRuleEvaluator(
                 "name" => NameOf(item),
                 "url" => item,
                 "key" => item.Key.ToString(),
-                "createDate" => item.CreateDate,
-                "updateDate" => item.UpdateDate,
+                "createDate" => PublishedContentCompat.CreateDate(item),
+                "updateDate" => PublishedContentCompat.UpdateDate(item),
                 _ => ReadProperty(item, segment),
             };
         }
@@ -310,7 +310,7 @@ public sealed partial class StructuredDataRuleEvaluator(
             case DateTimeOffset offset:
                 return JsonValue.Create(offset.ToString("yyyy-MM-dd'T'HH:mm:ssK"));
             case IPublishedContent picked:
-                return picked.ItemType == PublishedItemType.Media
+                return PublishedContentCompat.ItemType(picked) == PublishedItemType.Media
                     ? MediaReference(picked.Key, format)
                     : format == "name"
                         ? JsonValue.Create(NameOf(picked))

@@ -36,6 +36,12 @@ dependency range starts there and a site on any later 17.x or 18.x resolves it. 
 solution and boots the test site against the floor, the latest 17.x and the latest 18.x on every
 push; the matrix is in `.github/workflows/ci.yml`. Release builds use the default version.
 
+Compiling against the floor is not enough on its own. Umbraco 18 moved `Name`, `CreateDate`,
+`UpdateDate`, `Cultures` and `ItemType` from `IPublishedContent` to `IPublishedElement`; the source
+compiles on both, but a binary built on 17 names the 17 interface and throws
+`MissingMethodException` on 18. Those members are read through `PublishedContentCompat`, which
+binds each getter by name at runtime, so the same DLL runs on either major.
+
 ## Install
 
 ```bash

@@ -52,3 +52,8 @@ means: the evaluator's `Bind` switch, the README table, and the source options i
 - Use an Umbraco API that is not in 17.0.0. The package compiles against that floor
   (`UmbracoVersion` in `Directory.Packages.props`) precisely so CI catches this; bumping the floor
   drops LTS sites and is a release decision, not a convenience.
+- Read `Name`, `CreateDate`, `UpdateDate`, `Cultures` or `ItemType` straight off an
+  `IPublishedContent`. Umbraco 18 moved them to `IPublishedElement`, so the compiled call binds to
+  one major only and throws `MissingMethodException` on the other even though the source compiles on
+  both. Go through `PublishedContentCompat`, and treat any other member that moves between majors the
+  same way. CI compiles per version and cannot see this; only running the floor-built DLL on 18 does.
