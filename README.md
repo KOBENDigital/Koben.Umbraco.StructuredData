@@ -144,7 +144,7 @@ Binding sources:
 | `property` | The page's `alias` (dot paths walk into picked content: `author.name`, `author.image`); `fallbackAliases` tried in order; `scope: "site"` reads the site root instead; `format: "name"` turns picked content into names, `"url"` into bare URLs |
 | `value` | A literal JSON value; `cultureValues: { "fr-FR": … }` overrides it per language |
 | `dictionary` | An Umbraco dictionary item by `key`, in the request culture, default language as fallback |
-| `url` / `name` / `createDate` / `updateDate` | The page's own |
+| `url` / `name` / `createDate` / `updateDate` | The page's own; `updateDate` is the requested language's last publish when the page varies by culture |
 | `breadcrumb` | `ListItem[]` from the root down to the page |
 | `children` | `ListItem[]` of published child pages |
 | `ref` | `{ "@id": "<site>/#organization" }` for `target` organization, website or webpage |
@@ -170,6 +170,9 @@ culture (invariant content falls back to its one URL), a `Fixed value` can carry
 overrides (`cultureValues`), and the `dictionary` source reads an Umbraco dictionary item with the
 default language as fallback. Entries authored in the page editor need none of this: mark the
 property "vary by culture" on the document type and Umbraco gives editors one value per language.
+Both honour the languages' "fall back to" setting: a property binding or a page's own entries left
+empty in one language are read from the language it falls back to, so a site that shares most
+content between languages only fills in what differs.
 
 **Precedence on a page**: site-wide rules → document type rules → entries authored on the site
 root → the page's own entries. A later node replaces an earlier one of the same `@type` (any

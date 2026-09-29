@@ -3,7 +3,7 @@
   <PropertyGroup>
     <StaticWebAssetBasePath>App_Plugins/Koben.StructuredData</StaticWebAssetBasePath>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>0.1.0-beta.4</Version>
+    <Version>0.1.0-beta.5</Version>
   </PropertyGroup>
 
   <PropertyGroup>

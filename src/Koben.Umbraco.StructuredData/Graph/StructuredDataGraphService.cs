@@ -7,7 +7,9 @@ using Koben.Umbraco.StructuredData.Rules;
 using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PublishedCache;
+using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.Navigation;
+using Umbraco.Extensions;
 
 namespace Koben.Umbraco.StructuredData.Graph;
 
@@ -20,6 +22,7 @@ public sealed class StructuredDataGraphService(
     IDocumentNavigationQueryService navigationQueryService,
     IPublishedContentCache contentCache,
     IVariationContextAccessor variationContextAccessor,
+    ILanguageService languageService,
     ILogger<StructuredDataGraphService> logger) : IStructuredDataGraphService
 {
     private const string TypeKey = "@type";
@@ -97,7 +100,7 @@ public sealed class StructuredDataGraphService(
                 continue;
             }
 
-            if (property.GetSourceValue() is not string json || string.IsNullOrWhiteSpace(json))
+            if (SourceValue(property) is not string json || string.IsNullOrWhiteSpace(json))
             {
                 continue;
             }
@@ -114,6 +117,34 @@ public sealed class StructuredDataGraphService(
         }
 
         return nodes;
+    }
+
+    /// <summary>
+    /// The stored value in the request culture, or, when the property varies and has none there, in the first
+    /// language the site's language fallback leads to: a language that shares most content with another leaves
+    /// its entries empty and takes that language's.
+    /// </summary>
+    private object? SourceValue(IPublishedProperty property)
+    {
+        string? culture = variationContextAccessor.VariationContext?.Culture;
+        if (property.HasValue() || property.PropertyType.Variations.VariesByCulture() is false || string.IsNullOrWhiteSpace(culture))
+        {
+            return property.GetSourceValue();
+        }
+
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { culture };
+        string? fallback = languageService.GetAsync(culture).GetAwaiter().GetResult()?.FallbackIsoCode;
+        while (fallback is not null && visited.Add(fallback))
+        {
+            if (property.HasValue(fallback))
+            {
+                return property.GetSourceValue(fallback);
+            }
+
+            fallback = languageService.GetAsync(fallback).GetAwaiter().GetResult()?.FallbackIsoCode;
+        }
+
+        return null;
     }
 
     /// <summary>

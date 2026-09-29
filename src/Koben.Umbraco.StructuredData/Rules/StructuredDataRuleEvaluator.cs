@@ -96,7 +96,7 @@ public sealed partial class StructuredDataRuleEvaluator(
             case "createDate":
                 return JsonValue.Create(FormatDate(PublishedContentCompat.CreateDate(content)));
             case "updateDate":
-                return JsonValue.Create(FormatDate(PublishedContentCompat.UpdateDate(content)));
+                return JsonValue.Create(FormatDate(UpdateDateOf(content)));
             case "breadcrumb":
                 return ListItems(Ancestors(content).Append(content));
             case "children":
@@ -178,6 +178,17 @@ public sealed partial class StructuredDataRuleEvaluator(
         return string.IsNullOrWhiteSpace(text) ? null : JsonValue.Create(text);
     }
 
+    /// <summary>
+    /// When the document was last published in the request culture when it varies (as the Delivery API
+    /// reports it), otherwise when it was last saved; publishing one language then leaves the others' dates be.
+    /// </summary>
+    private DateTime UpdateDateOf(IPublishedContent content)
+        => Culture is { } culture
+            && content.ContentType.VariesByCulture()
+            && PublishedContentCompat.Cultures(content).TryGetValue(culture, out PublishedCultureInfo? info)
+                ? info.Date
+                : PublishedContentCompat.UpdateDate(content);
+
     /// <summary>The document's name in the request culture when it varies, otherwise its invariant name.</summary>
     private string? NameOf(IPublishedContent content)
     {
@@ -252,7 +263,7 @@ public sealed partial class StructuredDataRuleEvaluator(
                 "url" => item,
                 "key" => item.Key.ToString(),
                 "createDate" => PublishedContentCompat.CreateDate(item),
-                "updateDate" => PublishedContentCompat.UpdateDate(item),
+                "updateDate" => UpdateDateOf(item),
                 _ => ReadProperty(item, segment),
             };
         }
@@ -273,7 +284,9 @@ public sealed partial class StructuredDataRuleEvaluator(
             return null;
         }
 
-        object? converted = item.Value(publishedValueFallback, alias, Culture);
+        // Language fallback, as configured on the site's languages: a language that shares most content with
+        // another leaves the shared values empty and reads them from the language it falls back to.
+        object? converted = item.Value(publishedValueFallback, alias, Culture, fallback: Fallback.ToLanguage);
         if (converted is not null)
         {
             return converted;
